@@ -16,3 +16,4 @@ ifttt.cfg
 *.py#
 cache/*
 \#*.*\#
+.python-version
