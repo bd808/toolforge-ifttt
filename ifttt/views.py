@@ -19,7 +19,9 @@
 
 """
 import operator
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
+import urllib.error
+import urllib.parse
 
 import feedparser
 import flask
@@ -37,14 +39,14 @@ feed_cache = werkzeug.contrib.cache.SimpleCache()
 class FeaturedFeedTriggerView(flask.views.MethodView):
     """Generic view for IFTT Triggers based on FeaturedFeeds."""
 
-    URL_FORMAT = "http://{0.wiki}/w/api.php?action=featuredfeed&feed={0.feed}"
+    URL_FORMAT = "https://{0.wiki}/w/api.php?action=featuredfeed&feed={0.feed}"
 
     def get_feed(self):
         """Fetch and parse the feature feed for this class."""
         url = self.URL_FORMAT.format(self)
         feed = feed_cache.get(url)
         if not feed:
-            feed = feedparser.parse(urllib.request.urlopen(url))
+            feed = feedparser.parse(urllib.request.urlopen(url))  # nosec: B310
             feed_cache.set(url, feed, timeout=5 * 60)
         return feed
 

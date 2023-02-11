@@ -24,15 +24,17 @@
 import os
 import datetime
 import operator
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
+import urllib.error
+import urllib.parse
 import json
-import lxml.html
+import lxml.html  # nosec: B410
 import logging
 
 import flask
 import flask.views
 
-from flask import g, render_template, make_response, request
+from flask import render_template, make_response, request
 
 import feedparser
 import cachelib.simple
@@ -111,7 +113,10 @@ NAMESPACE_MAP = {
     -2: "Media",
 }
 
-DEFAULT_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Wikipedia%27s_W.svg/500px-Wikipedia%27s_W.svg.png"
+DEFAULT_IMAGE = (
+    "https://upload.wikimedia.org/wikipedia/commons/"
+    "thumb/5/5a/Wikipedia%27s_W.svg/500px-Wikipedia%27s_W.svg.png"
+)
 
 
 def add_images(get_data):
@@ -143,7 +148,7 @@ def get_page_image(page_titles, lang=DEFAULT_LANG, timeout=LONG_CACHE_EXPIRATION
     }
     params = urlencode(params)
     url = "%s?%s" % (formatted_url, params)
-    resp = json.load(urllib.request.urlopen(url))
+    resp = json.load(urllib.request.urlopen(url))  # nosec: B310
     pages = resp.get("query", {}).get("pages", {})
     if not pages:
         return None
@@ -228,7 +233,7 @@ class BaseFeaturedFeedTriggerView(BaseTriggerView):
         url = self._base_url.format(self)
         feed = cache.get(url)
         if not feed:
-            feed = feedparser.parse(urllib.request.urlopen(url))
+            feed = feedparser.parse(urllib.request.urlopen(url))  # nosec: B310
             cache.set(url, feed, timeout=CACHE_EXPIRATION)
         return feed
 
@@ -258,7 +263,7 @@ class BaseFeaturedFeedTriggerView(BaseTriggerView):
 class BaseAPIQueryTriggerView(BaseTriggerView):
     """Generic view for IFTT Triggers based on API MediaWiki Queries."""
 
-    _base_url = "http://{0.wiki}/w/api.php"
+    _base_url = "https://{0.wiki}/w/api.php"
 
     def get_query(self):
         formatted_url = self._base_url.format(self)
@@ -266,7 +271,7 @@ class BaseAPIQueryTriggerView(BaseTriggerView):
         url = "%s?%s" % (formatted_url, params)
         resp = cache.get(url)
         if not resp:
-            resp = json.load(urllib.request.urlopen(url))
+            resp = json.load(urllib.request.urlopen(url))  # nosec: B310
             cache.set(url, resp, timeout=CACHE_EXPIRATION)
         return resp
 
@@ -384,7 +389,7 @@ class TrendingTopics(BaseTriggerView):
         url = "%s%s" % (self.url, path)
         resp = cache.get(url)
         if not resp:
-            resp = json.load(urllib.request.urlopen(url))
+            resp = json.load(urllib.request.urlopen(url))  # nosec: B310
             cache.set(url, resp, timeout=60)
         return resp
 
@@ -516,8 +521,8 @@ class NewHashtag(BaseTriggerView):
         return ret
 
     def validate_tags(self, rev):
-        _not_tags = ["redirect", "tag", "ifexist", "if"]
-        if set([tag.lower() for tag in rev["raw_tags"]]) - set(_not_tags):
+        _not_tags = set("redirect", "tag", "ifexist", "if")
+        if {tag.lower() for tag in rev["raw_tags"]} - _not_tags:
             return True
         else:
             return False
@@ -686,7 +691,6 @@ class GeoRevisions(BaseAPIQueryTriggerView):
     def get_data(self):
         api_resp = self.get_query()
         titles = [article["title"] for article in api_resp["query"]["geosearch"]]
-        cache_name = str(titles)
         revisions = get_article_list_revisions(titles)
         return [self.parse_result(rev) for rev in revisions]
 

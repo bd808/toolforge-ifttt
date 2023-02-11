@@ -21,7 +21,6 @@
 """
 
 import flask
-from flask import request
 
 from .utils import snake_case
 from .triggers import (
