@@ -25,17 +25,17 @@ import pymysql
 import toolforge
 
 DEFAULT_HOURS = 1
-DEFAULT_LANG = 'en'
+DEFAULT_LANG = "en"
 DEFAULT_LIMIT = 50
 
 
 def ht_db_connect():
-    connection = toolforge.toolsdb(app.config['HT_DB_NAME'])
+    connection = toolforge.toolsdb(app.config["HT_DB_NAME"])
     return connection
 
 
 def run_query(query, query_params, lang):
-    db_title = lang + 'wiki_p'
+    db_title = lang + "wiki_p"
     connection = toolforge.connect(db_title)
     cursor = connection.cursor(pymysql.DictCursor)
     cursor.execute(query, query_params)
@@ -44,11 +44,11 @@ def run_query(query, query_params, lang):
 
 
 def get_hashtags(tag, lang=DEFAULT_LANG, limit=DEFAULT_LIMIT):
-    if tag and tag[0] == '#':
+    if tag and tag[0] == "#":
         tag = tag[1:]
     connection = ht_db_connect()
     cursor = connection.cursor(pymysql.DictCursor)
-    query = '''
+    query = """
     SELECT *
     FROM recentchanges AS rc
     JOIN hashtag_recentchanges AS htrc
@@ -58,7 +58,7 @@ def get_hashtags(tag, lang=DEFAULT_LANG, limit=DEFAULT_LIMIT):
     WHERE ht.ht_text = ?
     AND rc.htrc_lang = ?
     ORDER BY rc.rc_id DESC
-    LIMIT ?'''
+    LIMIT ?"""
     params = (tag, lang, limit)
     cursor.execute(query, params)
     return cursor.fetchall()
@@ -67,20 +67,21 @@ def get_hashtags(tag, lang=DEFAULT_LANG, limit=DEFAULT_LIMIT):
 def get_all_hashtags(lang=DEFAULT_LANG, limit=DEFAULT_LIMIT):
     connection = ht_db_connect()
     cursor = connection.cursor(pymysql.DictCursor)
-    query = '''
+    query = """
     SELECT *
     FROM recentchanges AS rc
     WHERE rc.rc_type = 0
     ORDER BY rc.rc_id DESC
-    LIMIT ?'''
+    LIMIT ?"""
     params = (limit,)
     cursor.execute(query, params)
     return cursor.fetchall()
 
 
-def get_category_members(category_name, lang=DEFAULT_LANG,
-                         hours=DEFAULT_HOURS, limit=DEFAULT_LIMIT):
-    query = '''SELECT rc.rc_title,
+def get_category_members(
+    category_name, lang=DEFAULT_LANG, hours=DEFAULT_HOURS, limit=DEFAULT_LIMIT
+):
+    query = """SELECT rc.rc_title,
        rc.rc_cur_id,
        rc.rc_namespace,
        cl.cl_timestamp
@@ -96,14 +97,16 @@ def get_category_members(category_name, lang=DEFAULT_LANG,
        AND cl.cl_timestamp >= DATE_SUB(NOW(), INTERVAL ? HOUR)
        GROUP BY rc.rc_cur_id
        ORDER BY rc.rc_id DESC
-       LIMIT ?'''
-    query_params = (category_name.replace(' ', '_'), hours, limit)
+       LIMIT ?"""
+    query_params = (category_name.replace(" ", "_"), hours, limit)
     ret = run_query(query, query_params, lang)
     return ret
 
-def get_article_list_revisions(articles, lang=DEFAULT_LANG,
-                               hours=DEFAULT_HOURS, limit=DEFAULT_LIMIT):
-    query = '''SELECT DISTINCT rc_id,
+
+def get_article_list_revisions(
+    articles, lang=DEFAULT_LANG, hours=DEFAULT_HOURS, limit=DEFAULT_LIMIT
+):
+    query = """SELECT DISTINCT rc_id,
                       rc_cur_id,
                       rc_title,
                       rc_timestamp,
@@ -119,15 +122,21 @@ def get_article_list_revisions(articles, lang=DEFAULT_LANG,
                AND rc_timestamp >= DATE_SUB(NOW(),
                                                INTERVAL ? HOUR)
                ORDER BY rc_id DESC
-               LIMIT ?''' % ', '.join(['?' for i in range(len(articles))])
-    query_params = tuple([article.replace(' ', '_') for article in articles]) + (hours, limit)
+               LIMIT ?""" % ", ".join(
+        ["?" for i in range(len(articles))]
+    )
+    query_params = tuple([article.replace(" ", "_") for article in articles]) + (
+        hours,
+        limit,
+    )
     ret = run_query(query, query_params, lang)
     return ret
 
 
-def get_category_member_revisions(category_name, lang=DEFAULT_LANG,
-                                  hours=DEFAULT_HOURS, limit=DEFAULT_LIMIT):
-    query = '''SELECT rc.rc_id,
+def get_category_member_revisions(
+    category_name, lang=DEFAULT_LANG, hours=DEFAULT_HOURS, limit=DEFAULT_LIMIT
+):
+    query = """SELECT rc.rc_id,
                       rc.rc_cur_id,
                       rc.rc_title,
                       rc.rc_timestamp,
@@ -151,7 +160,7 @@ def get_category_member_revisions(category_name, lang=DEFAULT_LANG,
                AND rc.rc_type = 0
                GROUP BY rc.rc_this_oldid
                ORDER BY rc.rc_id DESC
-               LIMIT ?'''
-    query_params = (category_name.replace(' ', '_'), hours, limit)
+               LIMIT ?"""
+    query_params = (category_name.replace(" ", "_"), hours, limit)
     ret = run_query(query, query_params, lang)
     return ret

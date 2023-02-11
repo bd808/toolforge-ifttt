@@ -26,23 +26,19 @@ from .utils import is_valid_ip
 
 
 class ValidateArticleTitle(APIQueryTriggerView):
-
-    url_pattern = 'article_revisions/fields/title/validate'
-    wiki = 'en.wikipedia.org'
-    query_params = {'action': 'query',
-                    'prop': 'info',
-                    'titles': None,
-                    'format': 'json'}
+    url_pattern = "article_revisions/fields/title/validate"
+    wiki = "en.wikipedia.org"
+    query_params = {"action": "query", "prop": "info", "titles": None, "format": "json"}
 
     def get_query(self):
-        self.query_params['titles'] = self.params.get('value')
-        if not self.query_params['titles']:
+        self.query_params["titles"] = self.params.get("value")
+        if not self.query_params["titles"]:
             flask.abort(400)
         return super(ValidateArticleTitle, self).get_query()
 
     def check_page(self):
         api_resp = self.get_query()
-        page_ids = list(api_resp['query']['pages'].keys())
+        page_ids = list(api_resp["query"]["pages"].keys())
         if int(page_ids[0]) > 0:
             return True
         return False
@@ -50,42 +46,44 @@ class ValidateArticleTitle(APIQueryTriggerView):
     def post(self):
         self.params = flask.request.get_json(force=True, silent=True) or {}
         exists = self.check_page()
-        title = self.query_params['titles']
-        ret = {'valid': exists}
+        title = self.query_params["titles"]
+        ret = {"valid": exists}
         if not exists:
-            ret['message'] = ('A Wikipedia article on %s does not (yet)'
-                              ' exist (go write it!)' % title)
+            ret["message"] = (
+                "A Wikipedia article on %s does not (yet)"
+                " exist (go write it!)" % title
+            )
         return flask.jsonify(data=ret)
 
 
 class ValidateUser(APIQueryTriggerView):
-
-    url_pattern = 'user_revisions/fields/user/validate'
-    wiki = 'en.wikipedia.org'
-    query_params = {'action': 'query',
-                    'list': 'users',
-                    'ususers': None,
-                    'format': 'json'}
+    url_pattern = "user_revisions/fields/user/validate"
+    wiki = "en.wikipedia.org"
+    query_params = {
+        "action": "query",
+        "list": "users",
+        "ususers": None,
+        "format": "json",
+    }
 
     def get_query(self):
-        self.query_params['ususers'] = self.params.get('value')
-        if not self.query_params['ususers']:
+        self.query_params["ususers"] = self.params.get("value")
+        if not self.query_params["ususers"]:
             flask.abort(400)
         return super(ValidateUser, self).get_query()
 
     def check_user(self):
         api_resp = self.get_query()
-        user_ids = api_resp['query']['users']
-        if user_ids[0].get('userid'):
+        user_ids = api_resp["query"]["users"]
+        if user_ids[0].get("userid"):
             return True
-        return is_valid_ip(self.query_params['ususers'])
+        return is_valid_ip(self.query_params["ususers"])
 
     def post(self):
         self.params = flask.request.get_json(force=True, silent=True) or {}
         exists = self.check_user()
-        title = self.query_params['ususers']
-        ret = {'valid': exists}
+        title = self.query_params["ususers"]
+        ret = {"valid": exists}
         if not exists:
-            ret['message'] = ('There is no Wikipedian named %s'
-                              % title)
+            ret["message"] = "There is no Wikipedian named %s" % title
         return flask.jsonify(data=ret)

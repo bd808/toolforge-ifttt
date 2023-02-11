@@ -24,54 +24,61 @@ import flask
 from flask import request
 
 from .utils import snake_case
-from .triggers import (ArticleOfTheDay,
-                       PictureOfTheDay,
-                       WordOfTheDay,
-                       ArticleRevisions,
-                       UserRevisions,
-                       NewArticle,
-                       NewHashtag,
-                       NewCategoryMember,
-                       TrendingTopics,
-                       CategoryMemberRevisions)
+from .triggers import (
+    ArticleOfTheDay,
+    PictureOfTheDay,
+    WordOfTheDay,
+    ArticleRevisions,
+    UserRevisions,
+    NewArticle,
+    NewHashtag,
+    NewCategoryMember,
+    TrendingTopics,
+    CategoryMemberRevisions,
+)
 
 import logging
-LOG_FILE = 'ifttt.log'
-logging.basicConfig(filename=LOG_FILE,
-                    format='%(asctime)s - %(message)s',
-                    datefmt='%m/%d/%Y %I:%M:%S %p',
-                    level=logging.DEBUG)
+
+LOG_FILE = "ifttt.log"
+logging.basicConfig(
+    filename=LOG_FILE,
+    format="%(asctime)s - %(message)s",
+    datefmt="%m/%d/%Y %I:%M:%S %p",
+    level=logging.DEBUG,
+)
 
 
-ALL_TRIGGERS = [ArticleOfTheDay,
-                PictureOfTheDay,
-                WordOfTheDay,
-                ArticleRevisions,
-                UserRevisions,
-                NewArticle,
-                NewHashtag,
-                NewCategoryMember,
-                TrendingTopics,
-                CategoryMemberRevisions]
+ALL_TRIGGERS = [
+    ArticleOfTheDay,
+    PictureOfTheDay,
+    WordOfTheDay,
+    ArticleRevisions,
+    UserRevisions,
+    NewArticle,
+    NewHashtag,
+    NewCategoryMember,
+    TrendingTopics,
+    CategoryMemberRevisions,
+]
 
 app = flask.Flask(__name__)
 # Load default config first
-app.config.from_pyfile('../default.cfg', silent=True)
+app.config.from_pyfile("../default.cfg", silent=True)
 # Override defaults if ifttt.cfg is present
-app.config.from_pyfile('../ifttt.cfg', silent=True)
+app.config.from_pyfile("../ifttt.cfg", silent=True)
 
 
 @app.errorhandler(400)
 def missing_field(e):
-    """There was something wrong with incoming data from IFTTT. """
-    error = {'message': 'missing required trigger field'}
+    """There was something wrong with incoming data from IFTTT."""
+    error = {"message": "missing required trigger field"}
     return flask.jsonify(errors=[error]), 400
 
 
 @app.errorhandler(401)
 def unauthorized(e):
     """Issue an HTTP 401 Unauthorized response with a JSON body."""
-    error = {'message': 'Unauthorized'}
+    error = {"message": "Unauthorized"}
     return flask.jsonify(errors=[error]), 401
 
 
@@ -80,7 +87,7 @@ def force_content_type(response):
     """RFC 4627 stipulates that 'application/json' takes no charset parameter,
     but IFTTT expects one anyway. We have to twist Flask's arm to get it to
     break the spec."""
-    response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    response.headers["Content-Type"] = "application/json; charset=utf-8"
     return response
 
 
@@ -89,31 +96,30 @@ def validate_channel_key():
     """Verify that the 'IFTTT-Channel-Key' header is present on each request
     and that its value matches the channel key we got from IFTTT. If a request
     fails this check, we reject it with HTTP 401."""
-    channel_key = flask.request.headers.get('IFTTT-Channel-Key')
-    if not app.debug and channel_key != app.config.get('CHANNEL_KEY'):
+    channel_key = flask.request.headers.get("IFTTT-Channel-Key")
+    if not app.debug and channel_key != app.config.get("CHANNEL_KEY"):
         flask.abort(401)
 
 
-@app.route('/v1/test/setup', methods=['POST'])
+@app.route("/v1/test/setup", methods=["POST"])
 def test_setup():
     """Required by the IFTTT endpoint test suite."""
-    ret = {'samples': {'triggers': {}}}
+    ret = {"samples": {"triggers": {}}}
     for trigger in ALL_TRIGGERS:
         trigger_name = snake_case(trigger.__name__)
         if trigger.default_fields:
-            ret['samples']['triggers'][trigger_name] = trigger.default_fields
+            ret["samples"]["triggers"][trigger_name] = trigger.default_fields
     return flask.jsonify(data=ret)
 
 
-@app.route('/v1/status')
+@app.route("/v1/status")
 def status():
     """Return HTTP 200 and an empty body, as required by the IFTTT spec."""
-    return ''
+    return ""
 
 
 for view_class in ALL_TRIGGERS:
-    slug = getattr(view_class, 'url_pattern', None)
+    slug = getattr(view_class, "url_pattern", None)
     if not slug:
         slug = snake_case(view_class.__name__)
-    app.add_url_rule('/v1/triggers/%s' % slug,
-                     view_func=view_class.as_view(slug))
+    app.add_url_rule("/v1/triggers/%s" % slug, view_func=view_class.as_view(slug))

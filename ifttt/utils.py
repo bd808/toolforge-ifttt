@@ -29,8 +29,8 @@ import socket
 
 def snake_case(s):
     """Convert CamelCase to snake_case."""
-    s = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', s)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s).lower()
+    s = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", s)
+    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s).lower()
 
 
 def select(element, selector):
@@ -56,7 +56,7 @@ def utc_to_epoch(struct_time):
 
 
 def iso8601_to_epoch(iso_time):
-    dt = datetime.datetime.strptime(iso_time, '%Y-%m-%dT%H:%M:%SZ')
+    dt = datetime.datetime.strptime(iso_time, "%Y-%m-%dT%H:%M:%SZ")
     epoch = datetime.datetime.utcfromtimestamp(0)
     return int((dt - epoch).total_seconds())
 

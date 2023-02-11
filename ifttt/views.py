@@ -29,7 +29,7 @@ import werkzeug.contrib.cache
 from .utils import url_to_uuid5, utc_to_epoch, utc_to_iso8601
 
 
-__all__ = ('FeaturedFeedTriggerView',)
+__all__ = ("FeaturedFeedTriggerView",)
 
 feed_cache = werkzeug.contrib.cache.SimpleCache()
 
@@ -37,7 +37,7 @@ feed_cache = werkzeug.contrib.cache.SimpleCache()
 class FeaturedFeedTriggerView(flask.views.MethodView):
     """Generic view for IFTT Triggers based on FeaturedFeeds."""
 
-    URL_FORMAT = 'http://{0.wiki}/w/api.php?action=featuredfeed&feed={0.feed}'
+    URL_FORMAT = "http://{0.wiki}/w/api.php?action=featuredfeed&feed={0.feed}"
 
     def get_feed(self):
         """Fetch and parse the feature feed for this class."""
@@ -53,19 +53,18 @@ class FeaturedFeedTriggerView(flask.views.MethodView):
         id = url_to_uuid5(entry.id)
         created_at = utc_to_iso8601(entry.published_parsed)
         ts = utc_to_epoch(entry.published_parsed)
-        return {'created_at': created_at, 'meta': {'id': id, 'timestamp': ts}}
+        return {"created_at": created_at, "meta": {"id": id, "timestamp": ts}}
 
     def get_items(self):
         """Get the set of items for this trigger."""
         feed = self.get_feed()
-        feed.entries.sort(key=operator.attrgetter('published_parsed'),
-                          reverse=True)
+        feed.entries.sort(key=operator.attrgetter("published_parsed"), reverse=True)
         return list(map(self.parse_entry, feed.entries))
 
     def post(self):
         """Handle POST requests."""
         params = flask.request.get_json(force=True, silent=True) or {}
-        limit = params.get('limit', 50)
+        limit = params.get("limit", 50)
         items = self.get_items()
         items = items[:limit]
         return flask.jsonify(data=items)
