@@ -41,7 +41,7 @@ def select(element, selector):
 
 def url_to_uuid5(url):
     """Generate a UUID5 for a given URL."""
-    return str(uuid.uuid5(uuid.NAMESPACE_URL, url.encode('utf-8')))
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, url))
 
 
 def utc_to_iso8601(struct_time):

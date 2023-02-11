@@ -21,7 +21,7 @@
 
 from flask import current_app as app
 
-import oursql
+import pymysql
 
 DEFAULT_HOURS = 1
 DEFAULT_LANG = 'en'
@@ -29,24 +29,28 @@ DEFAULT_LIMIT = 50
 
 
 def ht_db_connect():
-    connection = oursql.connect(db=app.config['HT_DB_NAME'],
-                                host=app.config['HT_DB_HOST'],
-                                user=app.config['DB_USER'],
-                                passwd=app.config['DB_PASSWORD'],
-                                charset=None,
-                                use_unicode=False)
+    connection = pymysql.connections.Connection(
+        user=app.config['DB_USER'],
+        passwd=app.config['DB_PASSWORD'],
+        host=app.config['HT_DB_HOST'],
+        database=app.config['HT_DB_NAME'],
+        charset=None,
+        use_unicode=False
+    )
     return connection
 
 
 def run_query(query, query_params, lang):
     db_title = lang + 'wiki_p'
     db_host = lang + 'wiki.labsdb'
-    connection = oursql.connect(db=db_title,
-                                host=db_host,
-                                user=app.config['DB_USER'],
-                                passwd=app.config['DB_PASSWORD'],
-                                charset=None)
-    cursor = connection.cursor(oursql.DictCursor)
+    connection = pymysql.connections.Connection(
+        user=app.config['DB_USER'],
+        passwd=app.config['DB_PASSWORD'],
+        host=db_host,
+        database=db_title,
+        charset=None
+    )
+    cursor = connection.cursor(pymysql.DictCursor)
     cursor.execute(query, query_params)
     ret = cursor.fetchall()
     return ret
@@ -56,7 +60,7 @@ def get_hashtags(tag, lang=DEFAULT_LANG, limit=DEFAULT_LIMIT):
     if tag and tag[0] == '#':
         tag = tag[1:]
     connection = ht_db_connect()
-    cursor = connection.cursor(oursql.DictCursor)
+    cursor = connection.cursor(pymysql.DictCursor)
     query = '''
     SELECT *
     FROM recentchanges AS rc
@@ -75,7 +79,7 @@ def get_hashtags(tag, lang=DEFAULT_LANG, limit=DEFAULT_LIMIT):
 
 def get_all_hashtags(lang=DEFAULT_LANG, limit=DEFAULT_LIMIT):
     connection = ht_db_connect()
-    cursor = connection.cursor(oursql.DictCursor)
+    cursor = connection.cursor(pymysql.DictCursor)
     query = '''
     SELECT *
     FROM recentchanges AS rc

@@ -37,7 +37,7 @@ import flask.views
 from flask import g, render_template, make_response, request
 
 import feedparser
-import werkzeug.contrib.cache
+import cachelib.simple
 
 from urllib.parse import urlencode
 
@@ -66,7 +66,7 @@ MAXRADIUS = 10000  # Wikipedia's max geosearch radius
 
 _cur_dir = os.path.dirname(__file__)
 _cache_dir = os.path.join(_cur_dir, '../cache')
-cache = werkzeug.contrib.cache.SimpleCache()
+cache = cachelib.simple.SimpleCache()
 
 logging.basicConfig(filename=LOG_FILE,
                     format='%(asctime)s - %(message)s',
