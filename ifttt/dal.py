@@ -22,6 +22,7 @@
 from flask import current_app as app
 
 import pymysql
+import toolforge
 
 DEFAULT_HOURS = 1
 DEFAULT_LANG = 'en'
@@ -29,27 +30,13 @@ DEFAULT_LIMIT = 50
 
 
 def ht_db_connect():
-    connection = pymysql.connections.Connection(
-        user=app.config['DB_USER'],
-        passwd=app.config['DB_PASSWORD'],
-        host=app.config['HT_DB_HOST'],
-        database=app.config['HT_DB_NAME'],
-        charset=None,
-        use_unicode=False
-    )
+    connection = toolforge.toolsdb(app.config['HT_DB_NAME'])
     return connection
 
 
 def run_query(query, query_params, lang):
     db_title = lang + 'wiki_p'
-    db_host = lang + 'wiki.labsdb'
-    connection = pymysql.connections.Connection(
-        user=app.config['DB_USER'],
-        passwd=app.config['DB_PASSWORD'],
-        host=db_host,
-        database=db_title,
-        charset=None
-    )
+    connection = toolforge.connect(db_title)
     cursor = connection.cursor(pymysql.DictCursor)
     cursor.execute(query, query_params)
     ret = cursor.fetchall()
