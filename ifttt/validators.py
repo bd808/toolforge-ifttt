@@ -42,7 +42,7 @@ class ValidateArticleTitle(APIQueryTriggerView):
 
     def check_page(self):
         api_resp = self.get_query()
-        page_ids = api_resp['query']['pages'].keys()
+        page_ids = list(api_resp['query']['pages'].keys())
         if int(page_ids[0]) > 0:
             return True
         return False

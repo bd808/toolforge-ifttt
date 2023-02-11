@@ -19,7 +19,7 @@
 
 """
 import operator
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 import feedparser
 import flask
@@ -44,7 +44,7 @@ class FeaturedFeedTriggerView(flask.views.MethodView):
         url = self.URL_FORMAT.format(self)
         feed = feed_cache.get(url)
         if not feed:
-            feed = feedparser.parse(urllib2.urlopen(url))
+            feed = feedparser.parse(urllib.request.urlopen(url))
             feed_cache.set(url, feed, timeout=5 * 60)
         return feed
 
@@ -60,7 +60,7 @@ class FeaturedFeedTriggerView(flask.views.MethodView):
         feed = self.get_feed()
         feed.entries.sort(key=operator.attrgetter('published_parsed'),
                           reverse=True)
-        return map(self.parse_entry, feed.entries)
+        return list(map(self.parse_entry, feed.entries))
 
     def post(self):
         """Handle POST requests."""

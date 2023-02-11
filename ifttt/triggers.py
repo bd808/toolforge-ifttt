@@ -26,7 +26,7 @@
 import os
 import datetime
 import operator
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import json
 import lxml.html
 import logging
@@ -39,15 +39,15 @@ from flask import g, render_template, make_response, request
 import feedparser
 import werkzeug.contrib.cache
 
-from urllib import urlencode
+from urllib.parse import urlencode
 
-from dal import (get_hashtags, 
+from .dal import (get_hashtags, 
                   get_all_hashtags, 
                   get_category_members,
                   get_category_member_revisions,
                   get_article_list_revisions)
 
-from utils import (select,
+from .utils import (select,
                     url_to_uuid5,
                     utc_to_epoch,
                     utc_to_iso8601,
@@ -135,11 +135,11 @@ def get_page_image(page_titles, lang=DEFAULT_LANG, timeout=LONG_CACHE_EXPIRATION
               'titles': '|'.join([title.replace(' ', '_') for title in page_titles])}
     params = urlencode(params)
     url = '%s?%s' % (formatted_url, params)
-    resp = json.load(urllib2.urlopen(url))
+    resp = json.load(urllib.request.urlopen(url))
     pages = resp.get('query', {}).get('pages', {})
     if not pages:
         return None
-    for page_id in pages.keys():
+    for page_id in list(pages.keys()):
         page_title = pages[page_id]['title']
         image_url = pages[page_id].get('thumbnail', {}).get('source')
         page_images[page_title] = image_url
@@ -161,9 +161,9 @@ class BaseTriggerView(flask.views.MethodView):
         self.limit = self.params.get('limit', DEFAULT_RESP_LIMIT)
         trigger_identity = self.params.get('trigger_identity')
         trigger_values = self.params.get('triggerFields', {})
-        for field, value in trigger_values.items():
+        for field, value in list(trigger_values.items()):
             self.fields[field] = value
-        for field, default_value in self.default_fields.items():
+        for field, default_value in list(self.default_fields.items()):
             if field not in self.fields and field in self.optional_fields:
                 if field not in TEST_FIELDS:
                     self.fields[field] = default_value
@@ -189,7 +189,7 @@ class BaseTriggerView(flask.views.MethodView):
         params = {"lang": request.args.get('lang'), "user": request.args.get('user'), \
                     "title": request.args.get('title')}
         trigger_values = self.params.get("triggerFields", params)
-        for field, default_value in self.default_fields.items():
+        for field, default_value in list(self.default_fields.items()):
             self.fields[field] = trigger_values.get(field)
             if not self.fields[field] and default_value not in TEST_FIELDS:
                 self.fields[field] = default_value
@@ -217,7 +217,7 @@ class BaseFeaturedFeedTriggerView(BaseTriggerView):
         url = self._base_url.format(self)
         feed = cache.get(url)
         if not feed:
-            feed = feedparser.parse(urllib2.urlopen(url))
+            feed = feedparser.parse(urllib.request.urlopen(url))
             cache.set(url, feed, timeout=CACHE_EXPIRATION)
         return feed
 
@@ -240,7 +240,7 @@ class BaseFeaturedFeedTriggerView(BaseTriggerView):
         feed = self.get_feed()
         feed.entries.sort(key=operator.attrgetter('published_parsed'),
                           reverse=True)
-        return map(self.parse_entry, feed.entries)
+        return list(map(self.parse_entry, feed.entries))
 
 class BaseAPIQueryTriggerView(BaseTriggerView):
     """Generic view for IFTT Triggers based on API MediaWiki Queries."""
@@ -253,7 +253,7 @@ class BaseAPIQueryTriggerView(BaseTriggerView):
         url = '%s?%s' % (formatted_url, params)
         resp = cache.get(url)
         if not resp:
-            resp = json.load(urllib2.urlopen(url))
+            resp = json.load(urllib.request.urlopen(url))
             cache.set(url, resp, timeout=CACHE_EXPIRATION)
         return resp
 
@@ -266,7 +266,7 @@ class BaseAPIQueryTriggerView(BaseTriggerView):
 
     def get_data(self):
         resp = self.get_query()
-        return map(self.parse_result, resp)
+        return list(map(self.parse_result, resp))
 
 
 class PictureOfTheDay(BaseFeaturedFeedTriggerView):
@@ -320,7 +320,7 @@ class ArticleOfTheDay(BaseFeaturedFeedTriggerView):
             # since we don't have <p> tags for the description, we
             # need to filter out the trailing <div>s
             item['summary'] = item['summary'].split('Recently featured')[0].strip()
-        item['summary'] = item['summary'].replace(u'(Full\xa0article...)', '')
+        item['summary'] = item['summary'].replace('(Full\xa0article...)', '')
         try:
             read_more = select(summary, 'p:first-of-type a:last-of-type')
         except IndexError:
@@ -366,13 +366,13 @@ class TrendingTopics(BaseTriggerView):
         url = '%s%s' % (self.url, path)
         resp = cache.get(url)
         if not resp:
-            resp = json.load(urllib2.urlopen(url))
+            resp = json.load(urllib.request.urlopen(url))
             cache.set(url, resp, timeout=60)
         return resp
 
     def get_data(self):
         resp = self.query('/api/trending/enwiki/%s'%self.fields['hrs'])
-        return filter(self.only_trending, map(self.parse_result, resp['pages']))
+        return list(filter(self.only_trending, list(map(self.parse_result, resp['pages']))))
 
     def only_trending(self, page):
         min_edits = self.fields['edits']
@@ -430,7 +430,7 @@ class NewArticle(BaseAPIQueryTriggerView):
             pages = api_resp['query']['recentchanges']
         except KeyError:
             return []
-        return map(self.parse_result, pages)
+        return list(map(self.parse_result, pages))
 
     def parse_result(self, rev):
         ret = {'date': rev['timestamp'],
@@ -461,7 +461,7 @@ class NewHashtag(BaseTriggerView):
         else:
             res = get_hashtags(self.tag, lang=self.lang, limit=self.limit)
         res.sort(key=lambda rev: rev['rc_timestamp'], reverse=True) 
-        return filter(self.validate_tags, map(self.parse_result, res))
+        return list(filter(self.validate_tags, list(map(self.parse_result, res))))
 
     def parse_result(self, rev):
         date = datetime.datetime.strptime(rev['rc_timestamp'], '%Y%m%d%H%M%S')
@@ -509,7 +509,7 @@ class NewCategoryMember(BaseTriggerView):
                       res,
                       timeout=CACHE_EXPIRATION)
         res.sort(key=lambda rev: rev['cl_timestamp'], reverse=True)
-        return map(self.parse_result, res)
+        return list(map(self.parse_result, res))
 
     def parse_result(self, rev):
         date = rev['cl_timestamp']
@@ -552,7 +552,7 @@ class CategoryMemberRevisions(BaseTriggerView):
                       res,
                       timeout=CACHE_EXPIRATION)
         res.sort(key=lambda rev: rev['rc_timestamp'], reverse=True)
-        return map(self.parse_result, res)
+        return list(map(self.parse_result, res))
 
     def parse_result(self, rev):
         date = datetime.datetime.strptime(rev['rc_timestamp'], '%Y%m%d%H%M%S')
@@ -596,11 +596,11 @@ class ArticleRevisions(BaseAPIQueryTriggerView):
     def get_data(self):
         api_resp = self.get_query()
         try:
-            page_id = api_resp['query']['pages'].keys()[0]
+            page_id = list(api_resp['query']['pages'].keys())[0]
             revisions = api_resp['query']['pages'][page_id]['revisions']
         except KeyError:
             return []
-        return map(self.parse_result, revisions)
+        return list(map(self.parse_result, revisions))
 
     def parse_result(self, revision):
         ret = {'date': revision['timestamp'],
@@ -687,7 +687,7 @@ class UserRevisions(BaseAPIQueryTriggerView):
             revisions = api_resp['query']['usercontribs']
         except KeyError:
             return []
-        return map(self.parse_result, revisions)
+        return list(map(self.parse_result, revisions))
 
     def parse_result(self, contrib):
         ret = {'date': contrib['timestamp'],

@@ -45,7 +45,7 @@ def set_stage(stage='staging'):
     environment
     """
     env.stage = stage
-    for option, value in STAGES[env.stage].items():
+    for option, value in list(STAGES[env.stage].items()):
         setattr(env, option, value)
 
 
@@ -78,7 +78,7 @@ def initialize_server():
     """
     Setup an initial deployment on a fresh host.
     """
-    print 'Setting up the ' + env.stage + ' server'
+    print('Setting up the ' + env.stage + ' server')
 
     # Setup source directory and make www-data the owner
     sudo('mkdir -p ' + SOURCE_DIR)
@@ -104,7 +104,7 @@ def deploy():
     """
     Deploys updated code to the web server
     """
-    print 'Deploying to ' + env.stage
+    print('Deploying to ' + env.stage)
 
     # Updates current version of ifttt source
     update_source_repo()
@@ -138,7 +138,7 @@ def update_source_repo():
     """
     Update the ifttt source repo
     """
-    print 'Updating ifttt source repo'
+    print('Updating ifttt source repo')
     with cd(SOURCE_DIR):
         sr('git', 'fetch', 'origin', env.branch)
         sr('git', 'reset', '--hard', 'FETCH_HEAD')
@@ -149,7 +149,7 @@ def upload_config():
     """
     Upload config to the remote host
     """
-    print 'Uploading config files to remote host(s)'
+    print('Uploading config files to remote host(s)')
     put(env.local_config_file, os.path.join(SOURCE_DIR, DEST_CONFIG_FILE),
         use_sudo=True)
     sudo("chown www-data:www-data " +
@@ -161,7 +161,7 @@ def upgrade_dependencies():
     """
     Installs upgraded versions of requirements (if applicable)
     """
-    print 'Upgrading requirements'
+    print('Upgrading requirements')
     with cd(VENV_DIR):
         sr(VENV_DIR + '/bin/pip', 'install', '--upgrade', '-r',
             os.path.join(SOURCE_DIR, 'requirements.txt'))
@@ -173,5 +173,5 @@ def restart_ifttt():
     """
     Restarts the ifttt web sersive
     """
-    print 'Restarting ifttt'
+    print('Restarting ifttt')
     sudo('service uwsgi-ifttt restart')
