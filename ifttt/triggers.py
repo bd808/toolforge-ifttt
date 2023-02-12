@@ -480,24 +480,30 @@ class NewHashtag(BaseTriggerView):
             res = get_all_hashtags(lang=self.lang, limit=self.limit)
         else:
             res = get_hashtags(self.tag, lang=self.lang, limit=self.limit)
-        res.sort(key=lambda rev: rev["rc_timestamp"], reverse=True)
+        res.sort(key=lambda rev: rev["rc_timestamp"].decode("utf-8"), reverse=True)
         return list(filter(self.validate_tags, list(map(self.parse_result, res))))
 
     def parse_result(self, rev):
-        date = datetime.datetime.strptime(rev["rc_timestamp"], "%Y%m%d%H%M%S")
+        date = datetime.datetime.strptime(
+            rev["rc_timestamp"].decode("utf-8"), "%Y%m%d%H%M%S"
+        )
         date = date.isoformat() + "Z"
-        tags = find_hashtags(rev["rc_comment"])
+        comment = rev["comment_text"].decode("utf-8")
+        tags = find_hashtags(comment)
         ret = {
             "raw_tags": tags,
             "input_hashtag": self.tag,
             "return_hashtags": " ".join(tags),
             "date": date,
-            "url": "https://%s/w/index.php?diff=%s&oldid=%s"
-            % (self.wiki, int(rev["rc_this_oldid"]), int(rev["rc_last_oldid"])),
-            "user": rev["rc_user_text"],
+            "url": "https://{}/w/index.php?diff={}&oldid={}".format(
+                self.wiki,
+                int(rev["rc_this_oldid"]),
+                int(rev["rc_last_oldid"]),
+            ),
+            "user": rev["actor_name"].decode("utf-8"),
             "size": rev["rc_new_len"] - rev["rc_old_len"],
-            "comment": rev["rc_comment"],
-            "title": rev["rc_title"],
+            "comment": comment,
+            "title": rev["rc_title"].decode("utf-8"),
         }
         ret["created_at"] = date
         ret["meta"] = {
@@ -537,9 +543,9 @@ class NewCategoryMember(BaseTriggerView):
         date = date.isoformat() + "Z"
         namespace = NAMESPACE_MAP.get(rev["rc_namespace"])
         if namespace and rev["rc_namespace"] > 0:
-            title = namespace + ":" + rev["rc_title"]
+            title = namespace + ":" + rev["rc_title"].decode("utf-8")
         else:
-            title = rev["rc_title"]
+            title = rev["rc_title"].decode("utf-8")
         if namespace is not None:
             url = "https://%s/wiki/%s" % (self.wiki, title.replace(" ", "_"))
         else:
@@ -578,7 +584,9 @@ class CategoryMemberRevisions(BaseTriggerView):
         return list(map(self.parse_result, res))
 
     def parse_result(self, rev):
-        date = datetime.datetime.strptime(rev["rc_timestamp"], "%Y%m%d%H%M%S")
+        date = datetime.datetime.strptime(
+            rev["rc_timestamp"].decode("utf-8"), "%Y%m%d%H%M%S"
+        )
         date = date.isoformat() + "Z"
         if not rev["rc_new_len"]:
             rev["rc_new_len"] = 0
@@ -586,12 +594,13 @@ class CategoryMemberRevisions(BaseTriggerView):
             rev["rc_old_len"] = 0
         ret = {
             "date": date,
-            "url": "https://%s/w/index.php?diff=%s&oldid=%s"
-            % (self.wiki, int(rev["rc_this_oldid"]), int(rev["rc_last_oldid"])),
-            "user": rev["rc_user_text"],
+            "url": "https://{}/w/index.php?diff={}&oldid={}".format(
+                self.wiki, int(rev["rc_this_oldid"]), int(rev["rc_last_oldid"])
+            ),
+            "user": rev["actor_name"].decode("utf-8"),
             "size": rev["rc_new_len"] - rev["rc_old_len"],
-            "comment": rev["rc_comment"],
-            "title": rev["rc_title"].replace("_", " "),
+            "comment": rev["comment_text"].decode("utf-8"),
+            "title": rev["rc_title"].decode("utf-8").replace("_", " "),
         }
         ret["created_at"] = date
         ret["meta"] = {
@@ -632,8 +641,9 @@ class ArticleRevisions(BaseAPIQueryTriggerView):
     def parse_result(self, revision):
         ret = {
             "date": revision["timestamp"],
-            "url": "https://%s/w/index.php?diff=%s&oldid=%s"
-            % (self.wiki, revision["revid"], revision["parentid"]),
+            "url": "https://{}/w/index.php?diff={}&oldid={}".format(
+                self.wiki, revision["revid"], revision["parentid"]
+            ),
             "user": revision["user"],
             "size": revision["size"],
             "comment": revision["comment"],
@@ -681,16 +691,19 @@ class GeoRevisions(BaseAPIQueryTriggerView):
         return [self.parse_result(rev) for rev in revisions]
 
     def parse_result(self, rev):
-        date = datetime.datetime.strptime(rev["rc_timestamp"], "%Y%m%d%H%M%S")
+        date = datetime.datetime.strptime(
+            rev["rc_timestamp"].decode("utf-8"), "%Y%m%d%H%M%S"
+        )
         date = date.isoformat() + "Z"
         ret = {
             "date": date,
-            "url": "https://%s/w/index.php?diff=%s&oldid=%s"
-            % (self.wiki, int(rev["rc_this_oldid"]), int(rev["rc_last_oldid"])),
-            "user": rev["rc_user_text"],
+            "url": "https://{}/w/index.php?diff={}&oldid={}".format(
+                self.wiki, int(rev["rc_this_oldid"]), int(rev["rc_last_oldid"])
+            ),
+            "user": rev["actor_name"].decode("utf-8"),
             "size": rev["rc_new_len"] - rev["rc_old_len"],
-            "comment": rev["rc_comment"],
-            "title": rev["rc_title"],
+            "comment": rev["comment_text"].decode("utf-8"),
+            "title": rev["rc_title"].decode("utf-8"),
         }
         ret["created_at"] = date
         ret["meta"] = {
@@ -730,8 +743,9 @@ class UserRevisions(BaseAPIQueryTriggerView):
     def parse_result(self, contrib):
         ret = {
             "date": contrib["timestamp"],
-            "url": "https://%s/w/index.php?diff=%s&oldid=%s"
-            % (self.wiki, contrib["revid"], contrib["parentid"]),
+            "url": "https://{}/w/index.php?diff={}&oldid={}".format(
+                self.wiki, contrib["revid"], contrib["parentid"]
+            ),
             "user": self.fields["user"],
             "size": contrib["size"],
             "comment": contrib["comment"],
