@@ -107,21 +107,22 @@ def get_category_members(
 def get_article_list_revisions(
     articles, lang=DEFAULT_LANG, hours=DEFAULT_HOURS, limit=DEFAULT_LIMIT
 ):
-    query = """SELECT DISTINCT rc_id,
-                      rc_cur_id,
-                      rc_title,
-                      rc_timestamp,
-                      rc_this_oldid,
-                      rc_last_oldid,
-                      rc_user_text,
-                      rc_old_len,
-                      rc_new_len,
-                      rc_comment
-               FROM recentchanges
-               WHERE rc_title IN ({})
-               AND rc_type = 0
-               AND rc_timestamp >= DATE_SUB(NOW(), INTERVAL %s HOUR)
-               ORDER BY rc_id DESC
+    query = """SELECT DISTINCT rc.rc_id,
+                      rc.rc_cur_id,
+                      rc.rc_title,
+                      rc.rc_timestamp,
+                      rc.rc_this_oldid,
+                      rc.rc_last_oldid,
+                      a.actor_name,
+                      rc.rc_old_len,
+                      rc.rc_new_len,
+                      rc.rc_comment
+               FROM recentchanges rc
+               LEFT JOIN actor a ON rc.rc_actor = a.actor_id
+               WHERE rc.rc_title IN ({})
+               AND rc.rc_type = 0
+               AND rc.rc_timestamp >= DATE_SUB(NOW(), INTERVAL %s HOUR)
+               ORDER BY rc.rc_id DESC
                LIMIT %s
             """.format(
         ", ".join(["%s" for i in range(len(articles))])
@@ -143,11 +144,12 @@ def get_category_member_revisions(
                       rc.rc_timestamp,
                       rc.rc_this_oldid,
                       rc.rc_last_oldid,
-                      rc.rc_user_text,
+                      a.actor_name,
                       rc.rc_old_len,
                       rc.rc_new_len,
                       rc.rc_comment
                FROM recentchanges AS rc
+               LEFT JOIN actor a ON rc.rc_actor = a.actor_id
                INNER JOIN recentchanges AS rc_talk
                    ON rc.rc_title = rc_talk.rc_title
                    AND rc_talk.rc_type = 0
