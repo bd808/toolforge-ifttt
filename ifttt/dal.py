@@ -4,6 +4,7 @@
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   Copyright 2015 Stephen LaPorte <stephen.laporte@gmail.com>
+  Copyright 2023 Wikimedia Foundation and contributors
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
