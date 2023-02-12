@@ -21,7 +21,6 @@
 
 """
 
-import os
 import datetime
 import operator
 import urllib.request
@@ -59,7 +58,6 @@ from .utils import (
     snake_case,
 )
 
-LOG_FILE = "ifttt.log"
 CACHE_EXPIRATION = 5 * 60
 LONG_CACHE_EXPIRATION = 12 * 60 * 60
 DEFAULT_LANG = "en"
@@ -68,16 +66,7 @@ TEST_FIELDS = ["test", "Coffee", "ClueBot", "All stub articles"]
 DEFAULT_RESP_LIMIT = 50  # IFTTT spec
 MAXRADIUS = 10000  # Wikipedia's max geosearch radius
 
-_cur_dir = os.path.dirname(__file__)
-_cache_dir = os.path.join(_cur_dir, "../cache")
 cache = cachelib.simple.SimpleCache()
-
-logging.basicConfig(
-    filename=LOG_FILE,
-    format="%(asctime)s - %(message)s",
-    datefmt="%m/%d/%Y %I:%M:%S %p",
-    level=logging.DEBUG,
-)
 
 # From https://www.mediawiki.org/wiki/Manual:Namespace
 NAMESPACE_MAP = {

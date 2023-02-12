@@ -19,6 +19,8 @@
   limitations under the License.
 
 """
+import logging
+import sys
 
 import flask
 
@@ -36,16 +38,6 @@ from .triggers import (
     CategoryMemberRevisions,
 )
 
-import logging
-
-LOG_FILE = "ifttt.log"
-logging.basicConfig(
-    filename=LOG_FILE,
-    format="%(asctime)s - %(message)s",
-    datefmt="%m/%d/%Y %I:%M:%S %p",
-    level=logging.DEBUG,
-)
-
 
 ALL_TRIGGERS = [
     ArticleOfTheDay,
@@ -59,6 +51,16 @@ ALL_TRIGGERS = [
     TrendingTopics,
     CategoryMemberRevisions,
 ]
+
+
+logging.basicConfig(
+    stream=sys.stderr,
+    format="%(asctime)s %(name)-12s %(levelname)-8s: %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%SZ",
+    level=logging.DEBUG,
+)
+logging.captureWarnings(True)
+
 
 app = flask.Flask(__name__)
 # Load default config first
