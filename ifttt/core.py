@@ -31,7 +31,6 @@ from .triggers import (
     NewArticle,
     NewCategoryMember,
     PictureOfTheDay,
-    TrendingTopics,
     UserRevisions,
     WordOfTheDay,
 )
@@ -46,7 +45,6 @@ ALL_TRIGGERS = [
     UserRevisions,
     NewArticle,
     NewCategoryMember,
-    TrendingTopics,
     CategoryMemberRevisions,
 ]
 
