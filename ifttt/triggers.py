@@ -38,14 +38,11 @@ import lxml.html  # nosec: B410
 from flask import make_response, render_template, request
 
 from .dal import (
-    get_all_hashtags,
     get_article_list_revisions,
     get_category_member_revisions,
     get_category_members,
-    get_hashtags,
 )
 from .utils import (
-    find_hashtags,
     iso8601_to_epoch,
     select,
     snake_case,
@@ -462,62 +459,6 @@ class NewArticle(BaseAPIQueryTriggerView):
         }
         ret.update(super(NewArticle, self).parse_result(ret))
         return ret
-
-
-class NewHashtag(BaseTriggerView):
-    """Trigger for hashtags in the edit summary."""
-
-    default_fields = {"lang": DEFAULT_LANG, "hashtag": "test"}
-    optional_fields = ["hashtag"]
-    url_pattern = "new_hashtag"
-
-    @add_images
-    def get_data(self):
-        self.wiki = "%s.wikipedia.org" % self.fields["lang"]
-        self.tag = self.fields["hashtag"]
-        self.lang = self.fields["lang"]
-        if self.tag == "":
-            res = get_all_hashtags(lang=self.lang, limit=self.limit)
-        else:
-            res = get_hashtags(self.tag, lang=self.lang, limit=self.limit)
-        res.sort(key=lambda rev: rev["rc_timestamp"].decode("utf-8"), reverse=True)
-        return list(filter(self.validate_tags, list(map(self.parse_result, res))))
-
-    def parse_result(self, rev):
-        date = datetime.datetime.strptime(
-            rev["rc_timestamp"].decode("utf-8"), "%Y%m%d%H%M%S"
-        )
-        date = date.isoformat() + "Z"
-        comment = rev["comment_text"].decode("utf-8")
-        tags = find_hashtags(comment)
-        ret = {
-            "raw_tags": tags,
-            "input_hashtag": self.tag,
-            "return_hashtags": " ".join(tags),
-            "date": date,
-            "url": "https://{}/w/index.php?diff={}&oldid={}".format(
-                self.wiki,
-                int(rev["rc_this_oldid"]),
-                int(rev["rc_last_oldid"]),
-            ),
-            "user": rev["actor_name"].decode("utf-8"),
-            "size": rev["rc_new_len"] - rev["rc_old_len"],
-            "comment": comment,
-            "title": rev["rc_title"].decode("utf-8"),
-        }
-        ret["created_at"] = date
-        ret["meta"] = {
-            "id": url_to_uuid5(ret["url"]),
-            "timestamp": iso8601_to_epoch(date),
-        }
-        return ret
-
-    def validate_tags(self, rev):
-        _not_tags = set("redirect", "tag", "ifexist", "if")
-        if {tag.lower() for tag in rev["raw_tags"]} - _not_tags:
-            return True
-        else:
-            return False
 
 
 class NewCategoryMember(BaseTriggerView):

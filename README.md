@@ -8,7 +8,6 @@ It currently supports the following triggers:
  - Article of the day
  - Word of the day
  - New article
- - Hashtag in an article edit summary
  - Updates to article
  - Updates from user
  - Page added to category

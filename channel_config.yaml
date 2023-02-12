@@ -1,7 +1,7 @@
---- 
-# 
+---
+#
 # Channel config details
-# 
+#
 - Name: Most edited articles
   Description: This trigger fires for any articles that are receiving an unusual level of edits
   Verbiage: Wikipedia article has unusual amount of edits
@@ -399,79 +399,3 @@
         Message to say: "Hello there! There was an edit on the Wikipedia article about {{Title}}, by {{User}} on {{Date}}."
       - Action: Quick add event
         Quick add text: "{{User}} edited the Wikipedia article on {{Title}} on {{Date}}"
-- Name: New edit with hashtag
-  Description: This Trigger fires every time a Wikipedia edit includes a specific hashtag.
-  Verbiage: New edit with hashtag
-  Endpoint: new_hashtag
-  Trigger Fields:
-      - Label: Hashtag
-        Key name: "hashtag"
-        Optional helper text: "A hashtag included in the edit summary. Leave blank for all hashtags."
-        Trigger field type: "Text input"
-        Validation: No validation required
-      - Label: Language
-        Key name: "lang"
-        Optional helper text: "Provide the two-letter [language code](http://en.wikipedia.org/wiki/Wikimedia_project#Language_codes) (defaults to English)"
-        Trigger field type: "Text input"
-        Validation: Validation required
-        How should this trigger be validated: "Text must match a custom regex"
-        Custom regex: "^[a-zA-Z]{0,2}$"
-        Message: "Use a two-letter code (like 'de' for German), or you can leave it blank for English"
-  Trigger Ingredients:
-      - Name: Date
-        Slug: created_at
-        Description: Date and time event was created.
-        Type: Date
-      - Name: Title
-        Slug: title
-        Description: "The article's title (note: it's case sensitive)"
-        Type: String
-        Example: Ulysses S. Grant
-      - Name: Size
-        Slug: size
-        Description: Byte size of the edit.
-        Type: String
-        Example: "+2,234"
-      - Name: Url
-        Slug: url
-        Description: The diff URL for the edit.
-        Type: Web URL
-        Example: "https://en.wikipedia.org/w/index.php?diff=655779011&oldid=655756646"
-      - Name: User
-        Slug: user
-        Description: User who made the edit.
-        Type: String
-        Example: Dario
-      - Name: EditSummary
-        Slug: comment
-        Description: A short message describing the edit.
-        Type: String
-        Example: "this edit is a #revert"
-      - Name: RevisionHashtags
-        Slug: return_hashtags
-        Description: "All hashtags found in the revision comment, including the trigger hashtag."
-        Type: String
-        Example: "editathon"
-      - Name: TriggerHashtag
-        Slug: input_hashtag
-        Description: The hashtag that you are looking for.
-        Type: String
-        Example: "editathon"
-  Trigger Examples:
-      - Action: Create a text post
-        Title: "New article with the {{RevisionHashtags}} tag."
-        Body: "The {{Title}} article on Wikipedia included the {{RevisionHashtags}} tag. {{User}} edited the article on {{Date}} : {{URL}}"
-        Tags: "wikipedia, {{RevisionHashtags}} , {{Title}}"
-      - Action: send notification
-        Notification: "The {{RevisionHashtags}} tag(s) appeared on the {{Title}} article on Wikipedia."
-      - Action: Create a text file
-        Filename: "Wikipedia edits with hashtags {{TriggerHashtag}}"
-        Dropbox folder path: "wikipedia/hashtags"
-        Text Body: "{{Date}} <br>{{Title}} <br>{{RevisionHashtags}}<br>{{URL}} <br>By {{User}}"
-      - Action: Add row to spreadsheet
-        Spreadsheet name: "Wikipedia edits with hashtags {{TriggerHashtag}}"
-        Formatted row: "{{Date}}|||{{Title}}|||{{URL}}|||{{User}}|||{{EditSummary}}|||{{RevisionTags}}"
-      - Action: Call my phone
-        Message to say: "Hello there! The {{RevisionHashtags}} tag(s) appeared in an edit to the {{Title}} article on Wikipedia."
-      - Action: Quick add event
-        Quick add text: "{{User}} edited the Wikipedia article on {{Title}} on {{Date}}, tagged {{RevisionHashtags}}"

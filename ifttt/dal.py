@@ -22,17 +22,11 @@
 import pymysql
 import pymysql.cursors
 import toolforge
-from flask import current_app as app
 
 
 DEFAULT_HOURS = 1
 DEFAULT_LANG = "en"
 DEFAULT_LIMIT = 50
-
-
-def ht_db_connect():
-    connection = toolforge.toolsdb(app.config["HT_DB_NAME"])
-    return connection
 
 
 def run_query(query, query_params, lang):
@@ -42,41 +36,6 @@ def run_query(query, query_params, lang):
     cursor.execute(query, query_params)
     ret = cursor.fetchall()
     return ret
-
-
-def get_hashtags(tag, lang=DEFAULT_LANG, limit=DEFAULT_LIMIT):
-    if tag and tag[0] == "#":
-        tag = tag[1:]
-    connection = ht_db_connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    query = """
-    SELECT *
-    FROM recentchanges AS rc
-    JOIN hashtag_recentchanges AS htrc
-      ON htrc.htrc_id = rc.htrc_id
-    JOIN hashtags AS ht
-      ON ht.ht_id = htrc.ht_id
-    WHERE ht.ht_text = ?
-    AND rc.htrc_lang = ?
-    ORDER BY rc.rc_id DESC
-    LIMIT ?"""
-    params = (tag, lang, limit)
-    cursor.execute(query, params)
-    return cursor.fetchall()
-
-
-def get_all_hashtags(lang=DEFAULT_LANG, limit=DEFAULT_LIMIT):
-    connection = ht_db_connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    query = """
-    SELECT *
-    FROM recentchanges AS rc
-    WHERE rc.rc_type = 0
-    ORDER BY rc.rc_id DESC
-    LIMIT ?"""
-    params = (limit,)
-    cursor.execute(query, params)
-    return cursor.fetchall()
 
 
 def get_category_members(
