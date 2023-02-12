@@ -24,19 +24,19 @@ import sys
 
 import flask
 
-from .utils import snake_case
 from .triggers import (
     ArticleOfTheDay,
-    PictureOfTheDay,
-    WordOfTheDay,
     ArticleRevisions,
-    UserRevisions,
-    NewArticle,
-    NewHashtag,
-    NewCategoryMember,
-    TrendingTopics,
     CategoryMemberRevisions,
+    NewArticle,
+    NewCategoryMember,
+    NewHashtag,
+    PictureOfTheDay,
+    TrendingTopics,
+    UserRevisions,
+    WordOfTheDay,
 )
+from .utils import snake_case
 
 
 ALL_TRIGGERS = [

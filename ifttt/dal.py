@@ -19,10 +19,10 @@
 
 """
 
-from flask import current_app as app
-
 import pymysql
 import toolforge
+from flask import current_app as app
+
 
 DEFAULT_HOURS = 1
 DEFAULT_LANG = "en"

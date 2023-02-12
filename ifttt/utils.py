@@ -22,9 +22,9 @@
 
 import datetime
 import re
+import socket
 import time
 import uuid
-import socket
 
 
 def snake_case(s):

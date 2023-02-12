@@ -22,41 +22,38 @@
 """
 
 import datetime
+import json
+import logging
 import operator
-import urllib.request
 import urllib.error
 import urllib.parse
-import json
-import lxml.html  # nosec: B410
-import logging
-
-import flask
-import flask.views
-
-from flask import render_template, make_response, request
-
-import feedparser
-import cachelib.simple
-
+import urllib.request
 from urllib.parse import urlencode
 
-from .dal import (
-    get_hashtags,
-    get_all_hashtags,
-    get_category_members,
-    get_category_member_revisions,
-    get_article_list_revisions,
-)
+import cachelib.simple
+import feedparser
+import flask
+import flask.views
+import lxml.html  # nosec: B410
+from flask import make_response, render_template, request
 
+from .dal import (
+    get_all_hashtags,
+    get_article_list_revisions,
+    get_category_member_revisions,
+    get_category_members,
+    get_hashtags,
+)
 from .utils import (
+    find_hashtags,
+    iso8601_to_epoch,
     select,
+    snake_case,
     url_to_uuid5,
     utc_to_epoch,
     utc_to_iso8601,
-    iso8601_to_epoch,
-    find_hashtags,
-    snake_case,
 )
+
 
 CACHE_EXPIRATION = 5 * 60
 LONG_CACHE_EXPIRATION = 12 * 60 * 60
