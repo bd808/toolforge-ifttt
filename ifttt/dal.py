@@ -116,9 +116,10 @@ def get_article_list_revisions(
                       a.actor_name,
                       rc.rc_old_len,
                       rc.rc_new_len,
-                      rc.rc_comment
+                      c.comment_text
                FROM recentchanges rc
                LEFT JOIN actor a ON rc.rc_actor = a.actor_id
+               LEFT JOIN comment c ON rc.rc_comment_id = c.comment_id
                WHERE rc.rc_title IN ({})
                AND rc.rc_type = 0
                AND rc.rc_timestamp >= DATE_SUB(NOW(), INTERVAL %s HOUR)
@@ -147,9 +148,10 @@ def get_category_member_revisions(
                       a.actor_name,
                       rc.rc_old_len,
                       rc.rc_new_len,
-                      rc.rc_comment
+                      c.comment_text
                FROM recentchanges AS rc
                LEFT JOIN actor a ON rc.rc_actor = a.actor_id
+               LEFT JOIN comment c ON rc.rc_comment_id = c.comment_id
                INNER JOIN recentchanges AS rc_talk
                    ON rc.rc_title = rc_talk.rc_title
                    AND rc_talk.rc_type = 0
