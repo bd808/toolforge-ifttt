@@ -20,6 +20,7 @@
 """
 
 import pymysql
+import pymysql.cursors
 import toolforge
 from flask import current_app as app
 
@@ -37,7 +38,7 @@ def ht_db_connect():
 def run_query(query, query_params, lang):
     db_title = lang + "wiki_p"
     connection = toolforge.connect(db_title)
-    cursor = connection.cursor(pymysql.DictCursor)
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
     cursor.execute(query, query_params)
     ret = cursor.fetchall()
     return ret
@@ -47,7 +48,7 @@ def get_hashtags(tag, lang=DEFAULT_LANG, limit=DEFAULT_LIMIT):
     if tag and tag[0] == "#":
         tag = tag[1:]
     connection = ht_db_connect()
-    cursor = connection.cursor(pymysql.DictCursor)
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
     query = """
     SELECT *
     FROM recentchanges AS rc
@@ -66,7 +67,7 @@ def get_hashtags(tag, lang=DEFAULT_LANG, limit=DEFAULT_LIMIT):
 
 def get_all_hashtags(lang=DEFAULT_LANG, limit=DEFAULT_LIMIT):
     connection = ht_db_connect()
-    cursor = connection.cursor(pymysql.DictCursor)
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
     query = """
     SELECT *
     FROM recentchanges AS rc
