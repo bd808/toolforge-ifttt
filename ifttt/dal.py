@@ -90,15 +90,15 @@ def get_category_members(
        INNER JOIN recentchanges AS rc_talk
              ON rc.rc_title = rc_talk.rc_title
              AND rc_talk.rc_type = 0
-             AND rc.rc_namespace = (rc_talk.rc_namespace - (rc_talk.rc_namespace % 2))
+             AND rc.rc_namespace = (rc_talk.rc_namespace - (rc_talk.rc_namespace %% 2))
        INNER JOIN categorylinks AS cl
              ON rc_talk.rc_cur_id = cl.cl_from
-       WHERE cl.cl_to = ?
+       WHERE cl.cl_to = %s
        AND rc.rc_type = 0
-       AND cl.cl_timestamp >= DATE_SUB(NOW(), INTERVAL ? HOUR)
+       AND cl.cl_timestamp >= DATE_SUB(NOW(), INTERVAL %s HOUR)
        GROUP BY rc.rc_cur_id
        ORDER BY rc.rc_id DESC
-       LIMIT ?"""
+       LIMIT %s"""
     query_params = (category_name.replace(" ", "_"), hours, limit)
     ret = run_query(query, query_params, lang)
     return ret
@@ -118,13 +118,13 @@ def get_article_list_revisions(
                       rc_new_len,
                       rc_comment
                FROM recentchanges
-               WHERE rc_title IN (%s)
+               WHERE rc_title IN ({})
                AND rc_type = 0
-               AND rc_timestamp >= DATE_SUB(NOW(),
-                                               INTERVAL ? HOUR)
+               AND rc_timestamp >= DATE_SUB(NOW(), INTERVAL %s HOUR)
                ORDER BY rc_id DESC
-               LIMIT ?""" % ", ".join(
-        ["?" for i in range(len(articles))]
+               LIMIT %s
+            """.format(
+        ", ".join(["%s" for i in range(len(articles))])
     )
     query_params = tuple([article.replace(" ", "_") for article in articles]) + (
         hours,
@@ -151,17 +151,16 @@ def get_category_member_revisions(
                INNER JOIN recentchanges AS rc_talk
                    ON rc.rc_title = rc_talk.rc_title
                    AND rc_talk.rc_type = 0
-                   AND rc.rc_namespace = (rc_talk.rc_namespace - (rc_talk.rc_namespace % 2))
+                   AND rc.rc_namespace = (rc_talk.rc_namespace - (rc_talk.rc_namespace %% 2))
                INNER JOIN categorylinks AS cl
                    ON rc_talk.rc_cur_id = cl.cl_from
-               WHERE cl.cl_to = ?
+               WHERE cl.cl_to = %s
                AND rc.rc_type = 0
-               AND rc.rc_timestamp >= DATE_SUB(NOW(),
-                                               INTERVAL ? HOUR)
+               AND rc.rc_timestamp >= DATE_SUB(NOW(), INTERVAL %s HOUR)
                AND rc.rc_type = 0
                GROUP BY rc.rc_this_oldid
                ORDER BY rc.rc_id DESC
-               LIMIT ?"""
+               LIMIT %s"""
     query_params = (category_name.replace(" ", "_"), hours, limit)
     ret = run_query(query, query_params, lang)
     return ret
